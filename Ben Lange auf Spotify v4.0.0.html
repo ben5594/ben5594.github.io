@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ben Lange auf Spotify</title>
+	<script>
+		fetch('https://gist.githubusercontent.com/ben5594/9d090e606ab7a4a613fe3e2f93d2a5b0/raw/45116aae551a34ff104273371f00e1829bf2f067/favicon.b64')
+			.then(response => response.text())
+			.then(base64Data => {
+				const link = document.createElement("link");
+				link.rel = "icon";
+				link.type = "image/png";
+				link.href = "data:image/png;base64," + base64Data;
+				document.head.appendChild(link);
+			});
+	</script>
+	<style>
+		@font-face {
+			font-family: "Spotify UI";
+			src: url("data:font/woff2;base64,FONT_PLACEHOLDER") format("woff2");
+			font-weight: normal;
+			font-style: normal;
+		}
+		body {
+			font-family: "Spotify UI", sans-serif;
+			font-size: 15px;
+			user-select: none;
+			text-align: center;
+			font-weight: normal;
+			background-color: var(--background);
+			color: var(--text-color);
+			overflow: auto;
+		}
+		.headline {
+			font-size: 30px;
+			color: var(--headline-color);
+		}
+		.section-headline {
+			font-size: 22px;
+		}
+		iframe {
+			border-radius: 15px;
+			height: 750px;
+			transition: box-shadow 0.3s ease-in-out;
+			width: 100%;
+			min-width: 350px;
+		}
+		.iframe-container {
+			display: flex;
+			gap: 10px;
+			padding: 10px;
+			overflow-x: auto;
+		}
+		.ben_button, .vince_button {
+			font-size: 16px;
+			border: 0px;
+			border-radius: 50px;
+			cursor: default;
+			width: 265px;
+			height: 65px;
+			font-family: "Spotify UI", sans-serif;
+			text-align: center;
+			user-select: none;
+			transition: box-shadow 0.3s ease-in-out;
+			background-color: #1ed65e;
+		}
+		.line {
+			border: 0;
+			height: 3px;
+			background-color: var(--line-color);
+			border-radius: 10px;
+			max-width: 300px;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--background: #111a11;
+				--text-color: #ffffff;
+				--headline-color: #1ed65e;
+				--line-color: #1ed65e;
+			}
+		}
+		@media (prefers-color-scheme: light) {
+			:root {
+				--background: #eee5ee;
+				--text-color: #000000;
+				--headline-color: #1ed65e;
+				--line-color: #1ed65e;
+			}
+		}
+		::-webkit-scrollbar {
+			width: 1px;
+			height: 1px;
+		}
+		::-webkit-scrollbar-track {
+			background: transparent;
+		}
+		::-webkit-scrollbar-thumb {
+			background: #1ed65e;
+			border-radius: 0px;
+		}
+		html {
+			scrollbar-color: #1ed65e transparent;
+			scrollbar-width: 1px;
+		}
+	</style>
+	<script>
+		fetch('https://gist.githubusercontent.com/ben5594/9d090e606ab7a4a613fe3e2f93d2a5b0/raw/6fc8c0fe7483019ce79971be70b8ebe2e1cb62ff/font.b64')
+			.then(response => response.text())
+			.then(base64Data => {
+				const style = document.createElement("style");
+				style.innerHTML = `
+					@font-face {
+						font-family: "Spotify UI";
+						src: url("data:font/woff2;base64,${base64Data}") format("woff2");
+						font-weight: normal;
+						font-style: normal;
+					}
+				`;
+				document.head.appendChild(style);
+			});
+		
+    function updateIframes() {
+        const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const newTheme = prefersDarkMode ? "0" : "1";
+
+        document.querySelectorAll("iframe").forEach(iframe => {
+            let src = iframe.getAttribute("src");
+            let updatedSrc = src.replace(/theme=\d/, `theme=${newTheme}`);
+            
+            iframe.setAttribute("src", updatedSrc);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", updateIframes);
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateIframes);
+	</script>
+</head>
+<body>
+	<h1 class="headline">Playlists von Ben Lange</h1>
+	<hr class="line">
+	<p class="section-headline">Playlists nur mit mir (10)</p>
+	<div class="iframe-container">
+		<iframe src="https://open.spotify.com/embed/playlist/5bCCNAqpiY8oSxoymkusan?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/6AOO3fpGh6tLbFIXnhTgdR?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/3nN4riFVs2KgDfuuVLmhKt?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/6PIgd5MXHMwLz0j7CmztUi?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/4UZNw5Zpp9KMxcRQaGzQqJ?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/57TAD5UDzFVAOXMOioh3cd?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/13n0WPlzJOFwsIVcXHj9qB?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/1SFhUBODMZ1baq9zqoTy17?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/1zEXITJyYwx9vEMdiR0Zil?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/playlist/45bQ1GgVmHDYkBolA5uboO?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+	</div>
+	<hr class="line">
+	<p class="section-headline">Playlists mit anderen Mitwirkenden (1)</p>
+	<div class="iframe-container">
+		<iframe src="https://open.spotify.com/embed/playlist/1dl07JtEbXEawvl4iEw5vm?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+	</div>
+	<hr class="line">
+	<p class="section-headline">Playlists in Kooperation mit mir (1)</p>
+	<div class="iframe-container">
+		<iframe src="https://open.spotify.com/embed/playlist/5qISHsuj9hIzTEOucaDThZ?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+	</div>
+	<hr class="line">
+	<p class="section-headline">Meine Lieblingskünstler</p>
+	<div class="iframe-container">
+		<iframe src="https://open.spotify.com/embed/artist/3t5xRXzsuZmMDkQzgOX35S?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/artist/23fqKkggKUBHNkbKtXEls4?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+		<iframe src="https://open.spotify.com/embed/artist/7f5Zgnp2spUuuzKplmRkt7?utm_source=generator&theme=0" frameborder="0" loading="eager"></iframe>
+	</div>
+	<hr class="line">
+	<a href="https://open.spotify.com/user/31bit66uffau6ccishdybd7wsdx4" target="_blank">
+		<button class="ben_button">
+			<b>Ben Lange</b>'s Spotify-Profil
+		</button>
+	</a>
+	<hr class="line">
+		<p class="section-headline">Ersteller von kooperierten Playlists</p>
+		<a href="https://open.spotify.com/user/317gnmk6krz2gyfpb4rw3gvcgafm" target="_blank">
+			<button class="vince_button">
+				<b>Vince</b>'s Spotify-Profil
+			</button>
+		</a>
+	<hr class="line">
+	Vielen Dank für's Vorbeischauen! <br> Zuletzt aktualisiert am 16. Juni 2025 um 12:18:18 Uhr <br><br>
+</body>
+</html>
