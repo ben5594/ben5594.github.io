@@ -228,15 +228,15 @@
 			</button>
 		</a>
 		<hr class="line">
-		Vielen Dank für's Vorbeischauen! <br> Zuletzt aktualisiert am 17. Juni 2025 um 11:59:20 Uhr <br><br>
-    <button onclick="teilen()">Teilen</button>
+		Vielen Dank für's Vorbeischauen! <br> Zuletzt aktualisiert am 17. Juni 2025 um 13:28:01 Uhr <br><br>
+    <button class="ben-button" onclick="teilen()">Teilen</button>
 	</body>
     <script>
         function teilen() {
             if (navigator.share) {
                 navigator.share({
                     title: "Ben Lange auf Spotify",
-                    text: "Schau dir meine Playlists auf Spotify an!",
+                    text: "Schau dir meine Playlists und Lieblingskünstler auf meiner Spotify-Logwebsite an!",
                     url: window.location.href
                 }).catch(error => console.log("Fehler beim Teilen: ", error));
             } else {
