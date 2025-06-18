@@ -6,7 +6,7 @@
     <title>Würfelspiel 10.000</title>
     <style>
         body { 
-            font-family: "Roboto", sans-serif; 
+			font-family: "Spotify UI", sans-serif;
             text-align: center; 
             font-size: 15px;
 			background-color: var(--background);
@@ -15,7 +15,18 @@
 		.text {
 			color: var(--text-color);
 		}
-        #dice-container, #saved-dice-container { 
+		.saved {
+			font-weight: 400;
+			color: var(--text-color);
+		}
+        #dice-container { 
+            display: flex; 
+            justify-content: center; 
+            gap: 10px; 
+            margin-top: 20px; 
+			overflow-x: auto;
+        }
+		#saved-dice-container { 
             display: flex; 
             justify-content: center; 
             gap: 10px; 
@@ -29,29 +40,32 @@
 			width: 200px;
 		}
 		.button-newgame {
-            font-family: "Roboto", sans-serif;
+            font-family: "Spotify UI", sans-serif;
             border: 1px solid var(--button-text-color);
             border-radius: 35px;
             font-size: 15px;
             background-color: var(--button-color);
 			color: var(--button-text-color);
+			cursor: default;
         }
         .button {
-            font-family: "Roboto", sans-serif;
+            font-family: "Spotify UI", sans-serif;
             border: 1px solid var(--button-text-color);
             border-radius: 35px;
             font-size: 15px;
             background-color: var(--button-color);
 			height: 70px;
 			color: var(--button-text-color);
+			cursor: default;
         }
         .button:disabled {
             background-color: var(--button-color-disabled);
 			border: 1px solid var(--button-text-color-disabled);
 			color: var(--button-text-color-disabled);
+			cursor: not-allowed;
         }
         #playerCount {
-            font-family: "Roboto", sans-serif;
+            font-family: "Spotify UI", sans-serif;
             border: 1px solid var(--button-text-color);
             border-radius: 20px;
             font-size: 15px;
@@ -61,23 +75,27 @@
 			color: var(--text-color);
         }
         .die { 
+			box-sizing: border-box;
             font-size: 2em; 
-            cursor: pointer; 
+            cursor: default; 
             padding: 10px; 
-            border: 1px solid var(--text-color); 
+            border: 2px solid var(--text-color); 
             user-select: none; 
             transition: opacity 0.2s; 
             border-radius: 10px;
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             text-align: center;
             display: flex;
             justify-content: center;
             align-items: center;
             color: var(--text-color);
+			font-weight: 400;
         }
         .selected { 
-            opacity: 0.5; 
+			font-weight: 700;
+			border: 3.5px solid var(--text-color);
+			opacity: 0.5;
         }
 		@media (prefers-color-scheme: dark) {
 			:root {
@@ -121,12 +139,26 @@
 		<button class="button" onclick="endTurn()">Weitergeben</button>
 	</div>
     <div id="dice-container"></div>
-    <h3 class="text">Gespeicherte Würfel:</h3>
+    <h3 class="saved">Gespeicherte Würfel:</h3>
     <div id="saved-dice-container"></div>
     <p class="text" id="roundScore"></p>
     <p class="text" id="totalScore"></p>
     <script>
-        let players = [], currentPlayerIndex = 0, dice = [], remainingDice = 6, roundScore = 0, savedDiceValues = [], MAX_ROLLS = 10, rollCount = 0, awaitingSave = false, rankCounter = 1;
+		fetch('https://gist.githubusercontent.com/ben5594/9d090e606ab7a4a613fe3e2f93d2a5b0/raw/6fc8c0fe7483019ce79971be70b8ebe2e1cb62ff/font.b64')
+			.then(response => response.text())
+			.then(base64Data => {
+				const style = document.createElement("style");
+				style.innerHTML = `
+					@font-face {
+						font-family: "Spotify UI";
+						src: url("data:font/woff2;base64,${base64Data}") format("woff2");
+						font-weight: normal;
+						font-style: normal;
+					}
+				`;
+				document.head.appendChild(style);
+			});
+        let players = [], currentPlayerIndex = 0, dice = [], remainingDice = 6, roundScore = 0, savedDiceValues = [], rollCount = 0, awaitingSave = false, rankCounter = 1;
         function startGame() {
             let count = parseInt(document.getElementById("playerCount").value);
             players = [];
@@ -153,7 +185,6 @@
         function rollDice() {
             if (awaitingSave) { alert("Zuerst speichern!"); return; }
             rollCount++;
-            if (rollCount > MAX_ROLLS) { alert("Maximale Anzahl an Würfen erreicht!"); endTurn(); return; }
             document.getElementById("rollButton").disabled = true;
             document.getElementById("saveButton").disabled = false;
             dice = [];
@@ -163,7 +194,7 @@
             updateDiceDisplay();
             let vals = dice.map(d => d.value);
             if (!isScoringRoll(vals)) { 
-                setTimeout(() => { alert("Kalt! Kein einziger Würfel bringt Punkte."); roundScore = 0; endTurn(true); }, 50); 
+                setTimeout(() => { alert("Kalt! Kein einziger Würfel bringt Punkte. Weitergabe erfolgt."); roundScore = 0; endTurn(true); }, 50); 
                 return; 
             }
             awaitingSave = true;
@@ -178,9 +209,13 @@
                 if (d.selected) cls += " selected";
                 e.className = cls;
                 e.onclick = () => {
-                    d.selected = !d.selected;
-                    updateDiceDisplay();
-                };
+					d.selected = !d.selected;
+					e.style.opacity = "0";
+					setTimeout(() => {
+						e.style.opacity = "1";
+						updateDiceDisplay();
+					}, 10);
+				};
                 c.appendChild(e);
             });
         }
@@ -190,16 +225,16 @@
             savedDiceValues.forEach(v => {
                 let e = document.createElement("div");
                 e.innerText = v;
-                e.className = "die selected";
+                e.className = "die";
                 c.appendChild(e);
             });
         }
         function updateRoundScore() {
-            document.getElementById("roundScore").innerText = "Rundenscore: " + roundScore;
+            document.getElementById("roundScore").innerText = "Punktestend dieser Runde: " + roundScore;
         }
         function updateScoreBoard() {
             document.getElementById("totalScore").innerHTML = players.map((p, i) => 
-                p.name + " - " + p.score + (p.finished ? " (Platz: " + p.rank + ")" : "")
+                p.name + ": " + p.score + (p.finished ? " (" + p.rank + ". Platz)" : "")
             ).join("<br>");
         }
         // Richtiges Schema der erlaubten Kombinationen
