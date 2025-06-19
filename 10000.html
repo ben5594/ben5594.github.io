@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Würfelspiel 10.000</title>
+	<style>
+		body { 
+			font-family: "Spotify UI", sans-serif;
+			text-align: center; 
+			font-size: 15px;
+			background-color: var(--background);
+			text-color: var(--text-color);
+			user-select: none;
+		}
+		.text {
+			color: var(--text-color);
+		}
+		.saved {
+			font-weight: 400;
+			color: var(--text-color);
+		}
+		#dice-container { 
+			display: flex; 
+			justify-content: center; 
+			gap: 10px; 
+			margin-top: 20px; 
+			overflow-x: auto;
+			min-height: 60px;
+			perspective: 600px;
+			overflow: hidden
+		}
+		#saved-dice-container { 
+			display: flex; 
+			justify-content: center; 
+			gap: 10px; 
+			margin-top: 20px; 
+			overflow-x: auto;
+			min-height: 60px;
+		}
+		.button-container {
+			display: inline-flex;
+			flex-direction: column;
+			gap: 20px;
+			width: 200px;
+		}
+		.button-newgame {
+			font-family: "Spotify UI", sans-serif;
+			border: 1px solid var(--button-text-color);
+			border-radius: 35px;
+			font-size: 15px;
+			background-color: var(--button-color);
+			color: var(--button-text-color);
+			cursor: default;
+		}
+		.button {
+			font-family: "Spotify UI", sans-serif;
+			border: 1px solid var(--button-text-color);
+			border-radius: 35px;
+			font-size: 15px;
+			background-color: var(--button-color);
+			height: 70px;
+			color: var(--button-text-color);
+			cursor: default;
+		}
+		.button:disabled {
+			display: none;
+		}
+		#playerCount {
+			font-family: "Spotify UI", sans-serif;
+			border: 1px solid var(--button-text-color);
+			border-radius: 20px;
+			font-size: 15px;
+			width: 2.1em;
+			background-color: var(--button-color);
+			text-align: center;
+			color: var(--text-color);
+		}
+		.die { 
+			box-sizing: border-box;
+			font-size: 2em; 
+			cursor: default; 
+			padding: 10px; 
+			border: 2px solid var(--text-color); 
+			user-select: none; 
+			transition: opacity 0.2s; 
+			border-radius: 10px;
+			width: 60px;
+			height: 60px;
+			text-align: center;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			color: var(--text-color);
+			font-weight: 400;
+		}
+		@keyframes rollX {
+			from { transform: rotateX(0deg); }
+			to { transform: rotateX(360deg); }
+		}
+		.die.rolling {
+			animation: rollX 0.4s ease-in-out;
+			transform-style: preserve-3d;
+		}
+		.selected { 
+			font-weight: 700;
+			border: 3.5px solid var(--text-color);
+			opacity: 0.5;
+		}
+		.kalt {
+			color: red;
+			font-weight: bold;
+			transition: color 0.3s ease;
+		}
+		.switch {
+		    position: relative;
+		    display: inline-block;
+		    width: 40px;
+		    height: 18px;
+		    vertical-align: middle;
+			bottom: 2px;
+		}
+		.switch input {
+		    opacity: 0;
+		    width: 0;
+		    height: 0;
+		}
+		.slider {
+    		position: absolute;
+	    	cursor: pointer;
+	    	top: 0; left: 0; right: 0; bottom: 0;
+		    background-color: #ff2222;
+		    transition: 0.4s;
+		    border-radius: 34px;
+		}
+		.slider:before {
+		    position: absolute;
+		    content: "";
+		    height: 14px;
+		    width: 14px;
+		    left: 2px;
+		    bottom: 2px;
+		    background-color: white;
+		    transition: 0.4s;
+		    border-radius: 50%;
+		}
+		input:checked + .slider {
+		    background-color: #4CAF50;
+		}
+		input:checked + .slider:before {
+		    transform: translateX(22px);
+		}
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--background: #11111a;
+				--text-color: #ffffff;
+				--button-text-color: #ffffff;
+				--button-color: #111111;
+				--button-color-disabled: #080808;
+				--button-text-color-disabled: #555555;
+			}
+		}
+		@media (prefers-color-scheme: light) {
+			:root {
+				--background: #eeeee5;
+				--text-color: #000000;
+				--button-text-color: #000000;
+				--button-color: #eeeeee;
+				--button-color-disabled: #e8e8e8;
+				--button-text-color-disabled: #aaaaaa;
+			}
+		}
+		input::-webkit-outer-spin-button,
+		input::-webkit-inner-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+		input[type="number"] {
+			-moz-appearance: textfield;
+		}
+	</style>
+</head>
+<body>
+	<h1 class="text">Würfelspiel 10.000</h1>
+	<label class="text">Anzahl der Spieler: <input type="number" id="playerCount" min="2" max="10" value="2"></label>
+	<button class="button-newgame" onclick="startGame()">Neues Spiel</button>
+	<br><br>
+	<label class="switch">
+	    <input type="checkbox" id="disableAlerts">
+	    <span class="slider"></span>
+	</label>
+	<span style="margin-left: 10px; color: var(--text-color);">Hinweise</span>
+	<h2 class="text" id="currentPlayer"></h2>
+	<div class="button-container">
+		<button class="button" id="rollButton" onclick="rollDice()">Würfeln</button>
+		<button class="button" id="saveButton" onclick="saveDice()" disabled>Würfel speichern</button>
+		<button class="button" onclick="endTurn()">Weitergeben</button>
+	</div>
+	<div id="dice-container"></div>
+	<h3 class="saved">Gespeicherte Würfel:</h3>
+	<div id="saved-dice-container"></div>
+	<p class="text" id="roundScore"></p>
+	<p class="text" id="totalScore"></p>
+	<script>
+		fetch('https://gist.githubusercontent.com/ben5594/9d090e606ab7a4a613fe3e2f93d2a5b0/raw/6fc8c0fe7483019ce79971be70b8ebe2e1cb62ff/font.b64')
+			.then(response => response.text())
+			.then(base64Data => {
+				const style = document.createElement("style");
+				style.innerHTML = `
+					@font-face {
+						font-family: "Spotify UI";
+						src: url("data:font/woff2;base64,${base64Data}") format("woff2");
+						font-weight: normal;
+						font-style: normal;
+					}
+				`;
+				document.head.appendChild(style);
+			});
+		let players = [], currentPlayerIndex = 0, dice = [], remainingDice = 6, roundScore = 0, savedDiceValues = [], rollCount = 0, awaitingSave = false, rankCounter = 1;
+		let isRolling = false;
+		function startGame() {
+			let count = parseInt(document.getElementById("playerCount").value);
+			players = []; 
+			rankCounter = 1;
+			for (let i = 0; i < count; i++) {
+				let name = prompt("Name des Spielers " + (i + 1), "Spieler " + (i + 1));
+				players.push({ name: name ? name : "Spieler " + (i + 1), score: 0, finished: false, rank: null });
+			}
+			updateScoreBoard();
+			nextTurn();
+		}
+		function maybeAlert(msg) {
+			if (document.getElementById("disableAlerts").checked) {
+				alert(msg);
+			}
+		}
+		function nextTurn() {
+			roundScore = 0;
+			savedDiceValues = [];
+			rollCount = 0;
+			awaitingSave = false;
+			updateSavedDiceDisplay();
+			document.getElementById("currentPlayer").innerText = "Am Zug: " + players[currentPlayerIndex].name;
+			remainingDice = 6;
+			updateRoundScore();
+			document.getElementById("dice-container").innerHTML = "";
+			document.getElementById("rollButton").disabled = false;
+			document.getElementById("saveButton").disabled = true;
+		}
+		function rollDice() {
+			isRolling = true;
+			if (awaitingSave) { maybeAlert("Zuerst speichern!"); return; }
+			rollCount++;
+			document.getElementById("rollButton").disabled = true;
+			document.getElementById("saveButton").disabled = false;
+			dice = [];
+			for (let i = 0; i < remainingDice; i++) { 
+				dice.push({ value: Math.floor(Math.random() * 6) + 1, selected: false });
+			}
+			updateDiceDisplay();
+			let vals = dice.map(d => d.value);
+			if (!isScoringRoll(vals)) {
+				awaitingSave = true;
+				// 🔴 Punkteanzeige rot markieren
+				const scoreElem = document.getElementById("roundScore");
+				scoreElem.classList.add("kalt");
+				// ⏳ 1 Sekunde warten – dann Meldung und Turn-Ende
+				setTimeout(() => {
+					scoreElem.classList.remove("kalt");
+					maybeAlert("Kalt! Kein einziger Würfel bringt Punkte. Weitergabe erfolgt.");
+					roundScore = 0;
+					endTurn(true);
+				}, 1000);
+				return;
+			}
+			awaitingSave = true;
+		}
+		function updateDiceDisplay() {
+			let c = document.getElementById("dice-container");
+			c.innerHTML = "";
+			dice.forEach(d => {
+				let e = document.createElement("div");
+				e.innerText = d.value;
+				let cls = "die";
+				if (d.selected) cls += " selected";
+				if (isRolling) {
+					cls += " rolling";
+				}
+				e.className = cls;
+				e.onclick = () => {
+					d.selected = !d.selected;
+					e.style.opacity = "0";
+					setTimeout(() => {
+						e.style.opacity = "1";
+						updateDiceDisplay();
+					}, 10);
+				};
+				c.appendChild(e);
+			});
+			if (isRolling) {
+				setTimeout(() => {
+					isRolling = false;
+					updateDiceDisplay(); 
+				}, 400);
+			}
+		}
+		function updateSavedDiceDisplay() {
+			let c = document.getElementById("saved-dice-container");
+			c.innerHTML = "";
+			savedDiceValues.forEach(v => {
+				let e = document.createElement("div");
+				e.innerText = v;
+				e.className = "die";
+				c.appendChild(e);
+			});
+		}
+		function updateRoundScore() {
+			document.getElementById("roundScore").innerText = "Punktestand dieser Runde: " + roundScore;
+		}
+		function updateScoreBoard() {
+			document.getElementById("totalScore").innerHTML = players.map((p, i) => 
+				p.name + ": " + p.score + (p.finished ? " (" + p.rank + ". Platz)" : "")
+			).join("<br>");
+		}
+		const validGroups = [
+			{ combo: [1], score: 100 },
+			{ combo: [1, 1], score: 200 },
+			{ combo: [1, 1, 1], score: 1000 },
+			{ combo: [1, 1, 1, 1], score: 10000 },
+			{ combo: [5], score: 50 },
+			{ combo: [5, 5], score: 100 },
+			{ combo: [5, 5, 5], score: 500 },
+			{ combo: [5, 5, 5, 5], score: 5000 },
+			{ combo: [2, 2, 2], score: 200 },
+			{ combo: [2, 2, 2, 2], score: 2000 },
+			{ combo: [3, 3, 3], score: 300 },
+			{ combo: [3, 3, 3, 3], score: 3000 },
+			{ combo: [4, 4, 4], score: 400 },
+			{ combo: [4, 4, 4, 4], score: 4000 },
+			{ combo: [6, 6, 6], score: 600 },
+			{ combo: [6, 6, 6, 6], score: 6000 },
+			{ combo: [1, 2, 3, 4, 5, 6], score: 5000 }
+		];
+		function partitionScore(diceArr) {
+			diceArr.sort((a, b) => a - b);
+			const key = diceArr.join(",");
+			if(key === "") return 0;
+			let best = -Infinity;
+			for(let group of validGroups) {
+				if(diceArr.length === group.combo.length) {
+					let ok = true;
+					for (let i = 0; i < group.combo.length; i++) {
+						if(diceArr[i] !== group.combo[i]) { ok = false; break; }
+					}
+					if(ok) return group.score;
+				}
+			}
+			for (let group of validGroups) {
+				if(diceArr.length >= group.combo.length) {
+					let pos = findSubsequence(diceArr, group.combo);
+					if(pos !== -1) {
+						let remaining = diceArr.slice(0, pos).concat(diceArr.slice(pos + group.combo.length));
+						let remScore = partitionScore(remaining);
+						if(remScore !== -Infinity) {
+							best = Math.max(best, group.score + remScore);
+						}
+					}
+				}
+			}
+			return best;
+		}
+		function findSubsequence(arr, sub) {
+			for (let i = 0; i <= arr.length - sub.length; i++) {
+				let match = true;
+				for (let j = 0; j < sub.length; j++) {
+					if(arr[i+j] !== sub[j]) { match = false; break; }
+				}
+				if(match) return i;
+			}
+			return -1;
+		}
+		function calculateTotalPoints(vals) {
+			let score = partitionScore(vals.slice());
+			return score === -Infinity ? 0 : score;
+		}
+		function isScoringRoll(vals) {
+			let c = {};
+			vals.forEach(v => { c[v] = (c[v] || 0) + 1; });
+			if ([1,2,3,4,5,6].every(n => c[n] >= 1))
+				return true;
+			if ((c[1] || 0) > 0 || (c[5] || 0) > 0)
+				return true;
+			for (let n in c) { if (c[n] >= 3) return true; }
+			return false;
+		}
+		function saveDice() {
+			if (!awaitingSave) { maybeAlert("Zuerst würfeln!"); return; }
+			let sel = dice.filter(d => d.selected);
+			if (sel.length === 0) { maybeAlert("Kein Würfel ausgewählt!"); return; }
+			let pts = calculateTotalPoints(sel.map(d => d.value));
+			if (pts === 0) { alert("Ungültige Auswahl! Bitte wähle Kombinationen gemäß dem Schema:\n1x1=100, 2x1=200, 3x1=1000, 4x1=10000\n1x5=50, 2x5=100, 3x5=500, 4x5=5000\n3x2=200, 4x2=2000\n3x3=300, 4x3=3000\n3x4=400, 4x4=4000\n3x6=600, 4x6=6000\n1-2-3-4-5-6=5000"); return; }
+			roundScore += pts;
+			sel.forEach(d => savedDiceValues.push(d.value));
+			updateSavedDiceDisplay();
+			remainingDice -= sel.length;
+			updateRoundScore();
+			if(remainingDice === 0) { maybeAlert("Alle Würfel aufgebraucht! Du darfst nochmal würfeln."); remainingDice = 6; }
+			awaitingSave = false;
+			document.getElementById("rollButton").disabled = false;
+			document.getElementById("saveButton").disabled = true;
+		}
+		function endTurn(isKalt = false) {
+			if (!isKalt) {
+				if (roundScore < 350) { maybeAlert("Du darfst nicht weitergeben, solange dein Punktestand dieser Runde unter 350 liegt."); return; }
+				players[currentPlayerIndex].score += roundScore;
+				if (players[currentPlayerIndex].score >= 10000) {
+					players[currentPlayerIndex].finished = true;
+					players[currentPlayerIndex].rank = rankCounter++;
+					alert(players[currentPlayerIndex].name + " ist fertig! (Platz: " + players[currentPlayerIndex].rank + ")");
+				}
+			}
+			roundScore = 0;
+			updateScoreBoard();
+			if (activePlayers().length === 1) {
+				let remaining = activePlayers()[0];
+				remaining.finished = true;
+				let rankedPlayers = [...players].sort((a, b) => b.score - a.score);
+				rankedPlayers.forEach((p, i) => p.rank = i + 1);
+				updateScoreBoard();
+				alert("Spiel beendet! Gewinner: " + rankedPlayers[0].name + " (Platz: 1)");
+				return;
+			}
+			currentPlayerIndex = getNextPlayerIndex(currentPlayerIndex);
+			nextTurn();
+		}
+		function getNextPlayerIndex(idx) {
+			let n = players.length;
+			for (let i = 1; i <= n; i++) {
+				let ni = (idx + i) % n;
+				if (!players[ni].finished) return ni;
+			}
+			return idx;
+		}
+		function activePlayers() { return players.filter(p => !p.finished); }
+	</script>
+</body>
+</html>
