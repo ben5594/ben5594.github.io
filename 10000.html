@@ -12,6 +12,7 @@
 			background-color: var(--background);
 			text-color: var(--text-color);
 			user-select: none;
+			align-items: center;
 		}
 		.text {
 			color: var(--text-color);
@@ -37,6 +38,7 @@
 			margin-top: 20px; 
 			overflow-x: auto;
 			min-height: 60px;
+			box-sizing: border-box;
 		}
 		.button-container {
 			display: inline-flex;
@@ -85,7 +87,7 @@
 			user-select: none; 
 			transition: opacity 0.2s; 
 			border-radius: 10px;
-			width: 60px;
+			min-width: 60px;
 			height: 60px;
 			text-align: center;
 			display: flex;
@@ -102,6 +104,16 @@
 			animation: rollX 0.4s ease-in-out;
 			transform-style: preserve-3d;
 		}
+		@keyframes shake {
+			0% { transform: translateX(0); }
+			25% { transform: translateX(-5px); }
+			50% { transform: translateX(5px); }
+			75% { transform: translateX(-5px); }
+			100% { transform: translateX(0); }
+		}
+		.shake {
+			animation: shake 0.4s ease;
+		}
 		.selected { 
 			font-weight: 700;
 			border: 3.5px solid var(--text-color);
@@ -112,13 +124,31 @@
 			font-weight: bold;
 			transition: color 0.3s ease;
 		}
+		.switches {
+			display: flex;
+			flex-direction: column;
+			align-items: center; 
+			gap: 8px;
+			margin: 8px auto;
+			max-width: 200px;
+		}
+		.switch-row {
+			display: flex;
+			align-items: center; 
+			width: 100%; 
+			gap: 8px;
+		}
+		.switch-label {
+			margin-left: 8px;
+			color: var(--text-color);
+		}
 		.switch {
 		    position: relative;
 		    display: inline-block;
 		    width: 40px;
 		    height: 18px;
-		    vertical-align: middle;
 			bottom: 2px;
+			vertical-align: middle;
 		}
 		.switch input {
 		    opacity: 0;
@@ -185,13 +215,24 @@
 	<label class="text">Anzahl der Spieler: <input type="number" id="playerCount" min="2" max="10" value="2"></label>
 	<button class="button-newgame" onclick="startGame()">Neues Spiel</button>
 	<br><br>
-	<label class="switch">
-	    <input type="checkbox" id="disableAlerts">
-	    <span class="slider"></span>
-	</label>
-	<span style="margin-left: 10px; color: var(--text-color);">Hinweise</span>
-	<h2 class="text" id="currentPlayer"></h2>
+	<div class="switches">
+		<div class="switch-row">
+			<label class="switch">
+			    <input type="checkbox" id="disableAlerts">
+			    <span class="slider"></span>
+			</label>
+			<span class="switch-label">Hinweise</span>
+		</div>
+		<div class="switch-row">
+			<label class="switch">
+			    <input type="checkbox" id="enableComboSelect">
+			    <span class="slider"></span>
+			</label>
+			<span class="switch-label">Combo-Select</span>
+		</div>
+	</div>
 	<div class="button-container">
+		<h2 class="text" id="currentPlayer"></h2>
 		<button class="button" id="rollButton" onclick="rollDice()">Würfeln</button>
 		<button class="button" id="saveButton" onclick="saveDice()" disabled>Würfel speichern</button>
 		<button class="button" onclick="endTurn()">Weitergeben</button>
@@ -216,15 +257,28 @@
 				`;
 				document.head.appendChild(style);
 			});
-		let players = [], currentPlayerIndex = 0, dice = [], remainingDice = 6, roundScore = 0, savedDiceValues = [], rollCount = 0, awaitingSave = false, rankCounter = 1;
+		let players = [],
+			currentPlayerIndex = 0,
+			dice = [],
+			remainingDice = 6,
+			roundScore = 0,
+			savedDiceValues = [],
+			rollCount = 0,
+			awaitingSave = false,
+			rankCounter = 1;
 		let isRolling = false;
 		function startGame() {
 			let count = parseInt(document.getElementById("playerCount").value);
-			players = []; 
+			players = [];
 			rankCounter = 1;
 			for (let i = 0; i < count; i++) {
 				let name = prompt("Name des Spielers " + (i + 1), "Spieler " + (i + 1));
-				players.push({ name: name ? name : "Spieler " + (i + 1), score: 0, finished: false, rank: null });
+				players.push({
+					name: name ? name : "Spieler " + (i + 1),
+					score: 0,
+					finished: false,
+					rank: null
+				});
 			}
 			updateScoreBoard();
 			nextTurn();
@@ -240,7 +294,8 @@
 			rollCount = 0;
 			awaitingSave = false;
 			updateSavedDiceDisplay();
-			document.getElementById("currentPlayer").innerText = "Am Zug: " + players[currentPlayerIndex].name;
+			document.getElementById("currentPlayer").innerText =
+				"Am Zug: " + players[currentPlayerIndex].name;
 			remainingDice = 6;
 			updateRoundScore();
 			document.getElementById("dice-container").innerHTML = "";
@@ -249,22 +304,23 @@
 		}
 		function rollDice() {
 			isRolling = true;
-			if (awaitingSave) { maybeAlert("Zuerst speichern!"); return; }
+			if (awaitingSave) {
+				maybeAlert("Zuerst speichern!");
+				return;
+			}
 			rollCount++;
 			document.getElementById("rollButton").disabled = true;
 			document.getElementById("saveButton").disabled = false;
 			dice = [];
-			for (let i = 0; i < remainingDice; i++) { 
+			for (let i = 0; i < remainingDice; i++) {
 				dice.push({ value: Math.floor(Math.random() * 6) + 1, selected: false });
 			}
 			updateDiceDisplay();
 			let vals = dice.map(d => d.value);
 			if (!isScoringRoll(vals)) {
 				awaitingSave = true;
-				// 🔴 Punkteanzeige rot markieren
 				const scoreElem = document.getElementById("roundScore");
 				scoreElem.classList.add("kalt");
-				// ⏳ 1 Sekunde warten – dann Meldung und Turn-Ende
 				setTimeout(() => {
 					scoreElem.classList.remove("kalt");
 					maybeAlert("Kalt! Kein einziger Würfel bringt Punkte. Weitergabe erfolgt.");
@@ -276,51 +332,63 @@
 			awaitingSave = true;
 		}
 		function updateDiceDisplay() {
-			let c = document.getElementById("dice-container");
-			c.innerHTML = "";
-			dice.forEach(d => {
-				let e = document.createElement("div");
-				e.innerText = d.value;
-				let cls = "die";
-				if (d.selected) cls += " selected";
-				if (isRolling) {
-					cls += " rolling";
-				}
-				e.className = cls;
-				e.onclick = () => {
-					d.selected = !d.selected;
-					e.style.opacity = "0";
-					setTimeout(() => {
-						e.style.opacity = "1";
+			const container = document.getElementById('dice-container');
+			container.innerHTML = '';
+			const comboMode = document.getElementById('enableComboSelect')?.checked ?? true;
+			const sortedDice = [...dice].sort((a, b) => a.value - b.value);
+			sortedDice.forEach(d => {
+				const el = document.createElement('div');
+				el.innerText = d.value;
+				el.className = ['die', d.selected && 'selected', isRolling && 'rolling'].filter(Boolean).join(' ');
+				if (awaitingSave) {
+					el.onclick = () => {
+						if (!comboMode) {
+							d.selected = !d.selected;
+						} else {
+							const same    = dice.filter(x => x.value === d.value);
+							const selCount = same.filter(x => x.selected).length;
+							if (selCount === 0) {
+								same.forEach(x => x.selected = true);
+							} else {
+								d.selected = !d.selected;
+							}
+						}
 						updateDiceDisplay();
-					}, 10);
-				};
-				c.appendChild(e);
+					};
+				} else {
+					el.onclick = null;
+				}
+				container.appendChild(el);
 			});
 			if (isRolling) {
 				setTimeout(() => {
 					isRolling = false;
-					updateDiceDisplay(); 
+					updateDiceDisplay();
 				}, 400);
 			}
 		}
 		function updateSavedDiceDisplay() {
-			let c = document.getElementById("saved-dice-container");
-			c.innerHTML = "";
-			savedDiceValues.forEach(v => {
-				let e = document.createElement("div");
-				e.innerText = v;
-				e.className = "die";
-				c.appendChild(e);
-			});
+			const container = document.getElementById('saved-dice-container');
+			container.innerHTML = '';
+			[...savedDiceValues]
+				.sort((a, b) => a - b)
+				.forEach(v => {
+					const el = document.createElement('div');
+					el.innerText = v;
+					el.className = 'die';
+					container.appendChild(el);
+				});
 		}
 		function updateRoundScore() {
-			document.getElementById("roundScore").innerText = "Punktestand dieser Runde: " + roundScore;
+			document.getElementById("roundScore").innerText =
+				"Punktestand dieser Runde: " + roundScore;
 		}
 		function updateScoreBoard() {
-			document.getElementById("totalScore").innerHTML = players.map((p, i) => 
-				p.name + ": " + p.score + (p.finished ? " (" + p.rank + ". Platz)" : "")
-			).join("<br>");
+			document.getElementById("totalScore").innerHTML = players
+				.map((p, i) =>
+					p.name + ": " + p.score + (p.finished ? " (" + p.rank + ". Platz)" : "")
+				)
+				.join("<br>");
 		}
 		const validGroups = [
 			{ combo: [1], score: 100 },
@@ -344,24 +412,29 @@
 		function partitionScore(diceArr) {
 			diceArr.sort((a, b) => a - b);
 			const key = diceArr.join(",");
-			if(key === "") return 0;
+			if (key === "") return 0;
 			let best = -Infinity;
-			for(let group of validGroups) {
-				if(diceArr.length === group.combo.length) {
+			for (let group of validGroups) {
+				if (diceArr.length === group.combo.length) {
 					let ok = true;
 					for (let i = 0; i < group.combo.length; i++) {
-						if(diceArr[i] !== group.combo[i]) { ok = false; break; }
+						if (diceArr[i] !== group.combo[i]) {
+							ok = false;
+							break;
+						}
 					}
-					if(ok) return group.score;
+					if (ok) return group.score;
 				}
 			}
 			for (let group of validGroups) {
-				if(diceArr.length >= group.combo.length) {
+				if (diceArr.length >= group.combo.length) {
 					let pos = findSubsequence(diceArr, group.combo);
-					if(pos !== -1) {
-						let remaining = diceArr.slice(0, pos).concat(diceArr.slice(pos + group.combo.length));
+					if (pos !== -1) {
+						let remaining = diceArr
+							.slice(0, pos)
+							.concat(diceArr.slice(pos + group.combo.length));
 						let remScore = partitionScore(remaining);
-						if(remScore !== -Infinity) {
+						if (remScore !== -Infinity) {
 							best = Math.max(best, group.score + remScore);
 						}
 					}
@@ -373,9 +446,12 @@
 			for (let i = 0; i <= arr.length - sub.length; i++) {
 				let match = true;
 				for (let j = 0; j < sub.length; j++) {
-					if(arr[i+j] !== sub[j]) { match = false; break; }
+					if (arr[i + j] !== sub[j]) {
+						match = false;
+						break;
+					}
 				}
-				if(match) return i;
+				if (match) return i;
 			}
 			return -1;
 		}
@@ -385,38 +461,75 @@
 		}
 		function isScoringRoll(vals) {
 			let c = {};
-			vals.forEach(v => { c[v] = (c[v] || 0) + 1; });
-			if ([1,2,3,4,5,6].every(n => c[n] >= 1))
-				return true;
-			if ((c[1] || 0) > 0 || (c[5] || 0) > 0)
-				return true;
-			for (let n in c) { if (c[n] >= 3) return true; }
+			vals.forEach(v => {
+				c[v] = (c[v] || 0) + 1;
+			});
+			if ([1, 2, 3, 4, 5, 6].every(n => c[n] >= 1)) return true;
+			if ((c[1] || 0) > 0 || (c[5] || 0) > 0) return true;
+			for (let n in c) {
+				if (c[n] >= 3) return true;
+			}
 			return false;
 		}
 		function saveDice() {
-			if (!awaitingSave) { maybeAlert("Zuerst würfeln!"); return; }
+			if (!awaitingSave) {
+				maybeAlert("Zuerst würfeln!");
+				return;
+			}
 			let sel = dice.filter(d => d.selected);
-			if (sel.length === 0) { maybeAlert("Kein Würfel ausgewählt!"); return; }
+			if (sel.length === 0) {
+				maybeAlert("Kein Würfel ausgewählt!");
+				return;
+			}
 			let pts = calculateTotalPoints(sel.map(d => d.value));
-			if (pts === 0) { alert("Ungültige Auswahl! Bitte wähle Kombinationen gemäß dem Schema:\n1x1=100, 2x1=200, 3x1=1000, 4x1=10000\n1x5=50, 2x5=100, 3x5=500, 4x5=5000\n3x2=200, 4x2=2000\n3x3=300, 4x3=3000\n3x4=400, 4x4=4000\n3x6=600, 4x6=6000\n1-2-3-4-5-6=5000"); return; }
+			if (pts === 0) {
+				alert(
+					"Ungültige Auswahl! Bitte wähle Kombinationen gemäß dem Schema:\n" +
+						"1x1=100, 2x1=200, 3x1=1000, 4x1=10000\n" +
+						"1x5=50, 2x5=100, 3x5=500, 4x5=5000\n" +
+						"3x2=200, 4x2=2000\n" +
+						"3x3=300, 4x3=3000\n" +
+						"3x4=400, 4x4=4000\n" +
+						"3x6=600, 4x6=6000\n" +
+						"1-2-3-4-5-6=5000"
+				);
+				return;
+			}
 			roundScore += pts;
 			sel.forEach(d => savedDiceValues.push(d.value));
 			updateSavedDiceDisplay();
 			remainingDice -= sel.length;
 			updateRoundScore();
-			if(remainingDice === 0) { maybeAlert("Alle Würfel aufgebraucht! Du darfst nochmal würfeln."); remainingDice = 6; }
+			if (remainingDice === 0) {
+				maybeAlert("Alle Würfel aufgebraucht! Du darfst nochmal würfeln.");
+				remainingDice = 6;
+			}
 			awaitingSave = false;
 			document.getElementById("rollButton").disabled = false;
 			document.getElementById("saveButton").disabled = true;
 		}
 		function endTurn(isKalt = false) {
 			if (!isKalt) {
-				if (roundScore < 350) { maybeAlert("Du darfst nicht weitergeben, solange dein Punktestand dieser Runde unter 350 liegt."); return; }
+				if (roundScore < 350) {
+					const btn = document.getElementById("nextTurnButton");
+					btn.classList.remove("shake");
+					void btn.offsetWidth;
+					btn.classList.add("shake");
+					maybeAlert(
+						"Du darfst nicht weitergeben, solange dein Punktestand dieser Runde unter 350 liegt."
+					);
+					return;
+				}
 				players[currentPlayerIndex].score += roundScore;
 				if (players[currentPlayerIndex].score >= 10000) {
 					players[currentPlayerIndex].finished = true;
 					players[currentPlayerIndex].rank = rankCounter++;
-					alert(players[currentPlayerIndex].name + " ist fertig! (Platz: " + players[currentPlayerIndex].rank + ")");
+					alert(
+						players[currentPlayerIndex].name +
+							" ist fertig! (Platz: " +
+							players[currentPlayerIndex].rank +
+							")"
+					);
 				}
 			}
 			roundScore = 0;
@@ -425,7 +538,7 @@
 				let remaining = activePlayers()[0];
 				remaining.finished = true;
 				let rankedPlayers = [...players].sort((a, b) => b.score - a.score);
-				rankedPlayers.forEach((p, i) => p.rank = i + 1);
+				rankedPlayers.forEach((p, i) => (p.rank = i + 1));
 				updateScoreBoard();
 				alert("Spiel beendet! Gewinner: " + rankedPlayers[0].name + " (Platz: 1)");
 				return;
@@ -441,7 +554,9 @@
 			}
 			return idx;
 		}
-		function activePlayers() { return players.filter(p => !p.finished); }
+		function activePlayers() {
+			return players.filter(p => !p.finished);
+		}
 	</script>
 </body>
 </html>
